@@ -1,209 +1,213 @@
 package com.backend.proyecto.asesorias.entities;
 
+import com.backend.proyecto.Horarios.entities.HorarioEntity;
+import com.backend.proyecto.Programadores.entities.ProgramadorPerfilEntity;
+import com.backend.proyecto.Usuarios.entities.UsuarioEntity;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Objects;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
+//Entidad que representa una asesoría solicitada por un usuario externo
 @Entity
-@Table(name="asesorias")
+@Table(name = "asesorias")
 public class AsesoriaEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Usuario que actúa como programador/mentor en la sesión
+    //Programador que dará la asesoría
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "programador_id", insertable = false, updatable = false)
-    //private UserEntity programador; --- IMPORTANTE DESCOMENTAR AL CREAR USER ENTITY ---
+    @JoinColumn(name = "programador_id", nullable = false)
+    private ProgramadorPerfilEntity programador;
 
-    // UID del programador asignado
-    @Column(name = "programador_id", nullable = false)
-    private String programadorId;
+    //Usuario externo que solicita la asesoría
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_externo_id", nullable = false)
+    private UsuarioEntity usuarioExterno;
 
-    @Column(name = "programmer_email")
-    private String programadorEmail;
+    //Fecha de la asesoría
+    @Column(nullable = false)
+    private LocalDate fecha;
 
-    @Column(name = "programmer_name")
-    private String programadorName;
+    //Hora de inicio
+    @Column(name = "hora_inicio", nullable = false)
+    private LocalTime horaInicio;
 
-    // Nombre del usuario que solicita la asesoría
-    @Column(name = "requester_name", nullable = false)
-    private String solicitanteName;
+    //Hora de fin
+    @Column(name = "hora_fin", nullable = false)
+    private LocalTime horaFin;
 
-    @Column(name = "requester_email", nullable = false)
-    private String solicitanteEmail;
+    //Motivo de la asesoría
+    @Column(length = 1000, nullable = false)
+    private String motivo;
 
-    // Detalles de agenda de la sesión
-    private String date; // Fecha programada para la asesoría
-    private String time; // Hora pactada para el encuentro
-
-    @Column(length = 1000)
-    private String nota; // Nota o descripción de la asesoría
-
+    //Estado de la asesoría
     @Enumerated(EnumType.STRING)
-    private Status status = Status.pending; // Estado de la solicitud
+    @Column(nullable = false)
+    private EstadoAsesoria estado = EstadoAsesoria.PENDIENTE;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    //Modalidad
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private HorarioEntity.Modalidad modalidad;
 
-    // Enumeración de los estados posibles de una solicitud
-    public enum Status {
-        pending, // Esperando respuesta del programador
-        approved, // Aceptada y programada
-        rejected // Denegada por el mentor
+    //Notas adicionales del programador
+    @Column(name = "notas_adicionales", length = 1000)
+    private String notasAdicionales;
+
+    //Fecha de solicitud
+    @Column(name = "fecha_solicitud", nullable = false)
+    private LocalDateTime fechaSolicitud = LocalDateTime.now();
+
+    //Fecha de respuesta (confirmación o rechazo)
+    @Column(name = "fecha_respuesta")
+    private LocalDateTime fechaRespuesta;
+
+    //Enum para estado de asesoría
+    public enum EstadoAsesoria {
+        PENDIENTE,
+        CONFIRMADA,
+        RECHAZADA,
+        COMPLETADA,
+        CANCELADA
     }
 
-    // Constructor por defecto (requerido por JPA)
+    //Constructor vacío (JPA)
     public AsesoriaEntity() {
     }
 
-    // Constructor con todos los campos
-    public AsesoriaEntity(Long id, String programadorId, String programadorEmail, String programadorName,
-                          String solicitanteName, String solicitanteEmail, String date, String time,
-                          String nota, Status status, LocalDateTime createdAt) {
+    //Constructor con parámetros
+    public AsesoriaEntity(Long id, ProgramadorPerfilEntity programador, UsuarioEntity usuarioExterno,
+            LocalDate fecha, LocalTime horaInicio, LocalTime horaFin, String motivo,
+            EstadoAsesoria estado, HorarioEntity.Modalidad modalidad, String notasAdicionales,
+            LocalDateTime fechaSolicitud, LocalDateTime fechaRespuesta) {
         this.id = id;
-        this.programadorId = programadorId;
-        this.programadorEmail = programadorEmail;
-        this.programadorName = programadorName;
-        this.solicitanteName = solicitanteName;
-        this.solicitanteEmail = solicitanteEmail;
-        this.date = date;
-        this.time = time;
-        this.nota = nota;
-        this.status = status;
-        this.createdAt = createdAt;
+        this.programador = programador;
+        this.usuarioExterno = usuarioExterno;
+        this.fecha = fecha;
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
+        this.motivo = motivo;
+        this.estado = estado;
+        this.modalidad = modalidad;
+        this.notasAdicionales = notasAdicionales;
+        this.fechaSolicitud = fechaSolicitud;
+        this.fechaRespuesta = fechaRespuesta;
     }
 
-    // Getters
+    //Getters
     public Long getId() {
         return id;
     }
 
-    public String getProgramadorId() {
-        return programadorId;
+    public ProgramadorPerfilEntity getProgramador() {
+        return programador;
     }
 
-    public String getProgramadorEmail() {
-        return programadorEmail;
+    public UsuarioEntity getUsuarioExterno() {
+        return usuarioExterno;
     }
 
-    public String getProgramadorName() {
-        return programadorName;
+    public LocalDate getFecha() {
+        return fecha;
     }
 
-    public String getSolicitanteName() {
-        return solicitanteName;
+    public LocalTime getHoraInicio() {
+        return horaInicio;
     }
 
-    public String getSolicitanteEmail() {
-        return solicitanteEmail;
+    public LocalTime getHoraFin() {
+        return horaFin;
     }
 
-    public String getDate() {
-        return date;
+    public String getMotivo() {
+        return motivo;
     }
 
-    public String getTime() {
-        return time;
+    public EstadoAsesoria getEstado() {
+        return estado;
     }
 
-    public String getNota() {
-        return nota;
+    public HorarioEntity.Modalidad getModalidad() {
+        return modalidad;
     }
 
-    public Status getStatus() {
-        return status;
+    public String getNotasAdicionales() {
+        return notasAdicionales;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getFechaSolicitud() {
+        return fechaSolicitud;
     }
 
-    // Setters
+    public LocalDateTime getFechaRespuesta() {
+        return fechaRespuesta;
+    }
+
+    //Setters
     public void setId(Long id) {
         this.id = id;
     }
 
-    public void setProgramadorId(String programadorId) {
-        this.programadorId = programadorId;
+    public void setProgramador(ProgramadorPerfilEntity programador) {
+        this.programador = programador;
     }
 
-    public void setProgramadorEmail(String programadorEmail) {
-        this.programadorEmail = programadorEmail;
+    public void setUsuarioExterno(UsuarioEntity usuarioExterno) {
+        this.usuarioExterno = usuarioExterno;
     }
 
-    public void setProgramadorName(String programadorName) {
-        this.programadorName = programadorName;
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
     }
 
-    public void setSolicitanteName(String solicitanteName) {
-        this.solicitanteName = solicitanteName;
+    public void setHoraInicio(LocalTime horaInicio) {
+        this.horaInicio = horaInicio;
     }
 
-    public void setSolicitanteEmail(String solicitanteEmail) {
-        this.solicitanteEmail = solicitanteEmail;
+    public void setHoraFin(LocalTime horaFin) {
+        this.horaFin = horaFin;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public void setEstado(EstadoAsesoria estado) {
+        this.estado = estado;
     }
 
-    public void setNota(String nota) {
-        this.nota = nota;
+    public void setModalidad(HorarioEntity.Modalidad modalidad) {
+        this.modalidad = modalidad;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setNotasAdicionales(String notasAdicionales) {
+        this.notasAdicionales = notasAdicionales;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setFechaSolicitud(LocalDateTime fechaSolicitud) {
+        this.fechaSolicitud = fechaSolicitud;
     }
 
-    // equals() basado en el ID (buena práctica JPA)
+    public void setFechaRespuesta(LocalDateTime fechaRespuesta) {
+        this.fechaRespuesta = fechaRespuesta;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         AsesoriaEntity that = (AsesoriaEntity) o;
         return id != null && Objects.equals(id, that.id);
     }
 
-    // hashCode() constante (buena práctica JPA para entidades con ID generado)
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "AsesoriaEntity{" +
-                "id=" + id +
-                ", programadorId='" + programadorId + '\'' +
-                ", programadorEmail='" + programadorEmail + '\'' +
-                ", programadorName='" + programadorName + '\'' +
-                ", solicitanteName='" + solicitanteName + '\'' +
-                ", solicitanteEmail='" + solicitanteEmail + '\'' +
-                ", date='" + date + '\'' +
-                ", time='" + time + '\'' +
-                ", nota='" + nota + '\'' +
-                ", status=" + status +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

@@ -1,37 +1,57 @@
-HELP.md
-.gradle
+# Archivos de configuración local
+.env
+.env.local
+.env.*.local
+
+# Build
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+target/
+out/
+*.jar
+*.war
+*.ear
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDE
+.idea/
+.vscode/
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+*.iws
+.settings/
+.classpath
+.project
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
-### VS Code ###
-.vscode/
+# Logs
+*.log
+logs/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Spring Boot
+spring-boot-devtools.properties
+
+# Temporary files
+*.tmp
+*.cache
+*.bak
+
+# Test coverage
+.jacoco/
+jacoco.exec
+
+# Database
+*.db
+*.sql
+
+# Validación
+backend_validation_errors.log

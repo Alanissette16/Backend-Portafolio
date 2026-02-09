@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# Build outputs
+build/
+target/
+out/
+bin/
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+
+# Archivos temporales
+*.log
+*.tmp
+*.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Otros
+README.md
+*.md
+docs/

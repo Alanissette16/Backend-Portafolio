@@ -10,7 +10,7 @@ description = "Proyecto project for Spring Boot"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -53,11 +53,7 @@ dependencies {
     // =========================
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // =========================
-    // LOMBOK
-    // =========================
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+
 
     // =========================
     // ACTUATOR (health / metrics)
