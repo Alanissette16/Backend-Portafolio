@@ -60,10 +60,7 @@ dependencies {
     // =========================
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-    // =========================
-    // SWAGGER / OPENAPI
-    // =========================
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+
 
     // =========================
     // CLOUDINARY
@@ -79,6 +76,11 @@ dependencies {
     // DEVTOOLS
     // =========================
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // =========================
+    // SWAGGER / OPENAPI
+    // =========================
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
 
     // =========================
     // TESTING

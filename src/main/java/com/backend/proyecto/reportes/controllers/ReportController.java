@@ -1,9 +1,6 @@
 package com.backend.proyecto.reportes.controllers;
 
 import com.backend.proyecto.reportes.services.ReportService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,20 +14,17 @@ import java.time.LocalDate;
 //Controlador para generación de reportes en PDF
 @RestController
 @RequestMapping("/api/reportes")
-@Tag(name = "Reportes", description = "Generación de reportes PDF")
-@SecurityRequirement(name = "bearer-jwt")
 public class ReportController {
 
         private final ReportService reportService;
 
-        //Constructor para inyección de dependencias
+        // Constructor para inyección de dependencias
         public ReportController(ReportService reportService) {
                 this.reportService = reportService;
         }
 
-        //Descargar reporte de asesorías (PDF)
+        // Descargar reporte de asesorías (PDF)
         @GetMapping("/asesorias.pdf")
-        @Operation(summary = "Descargar reporte de asesorías (PDF)")
         public ResponseEntity<ByteArrayResource> downloadAsesoriasPdf(
                         @RequestParam(required = false) Long programadorId,
                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -46,9 +40,8 @@ public class ReportController {
                                 .body(resource);
         }
 
-        //Descargar reporte de proyectos (PDF)
+        // Descargar reporte de proyectos (PDF)
         @GetMapping("/proyectos.pdf")
-        @Operation(summary = "Descargar reporte de proyectos (PDF)")
         public ResponseEntity<ByteArrayResource> downloadProyectosPdf(
                         @RequestParam(required = false) Long programadorId,
                         @RequestParam(required = false) Boolean activo) {

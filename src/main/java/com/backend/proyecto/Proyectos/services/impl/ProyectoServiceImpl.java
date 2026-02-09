@@ -10,11 +10,10 @@ import com.backend.proyecto.Proyectos.services.ProyectoService;
 import com.backend.proyecto.Programadores.entities.ProgramadorPerfilEntity;
 import com.backend.proyecto.Programadores.repositories.ProgramadorRepository;
 import com.backend.proyecto.exceptions.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 //Implementación del servicio para la gestión de proyectos
 @Service
@@ -25,7 +24,7 @@ public class ProyectoServiceImpl implements ProyectoService {
     private final ProgramadorRepository programadorRepository;
     private final ProyectoMapper proyectoMapper;
 
-    //Constructor para inyección de dependencias
+    // Constructor para inyección de dependencias
     public ProyectoServiceImpl(ProyectoRepository proyectoRepository,
             ProgramadorRepository programadorRepository,
             ProyectoMapper proyectoMapper) {
@@ -36,13 +35,13 @@ public class ProyectoServiceImpl implements ProyectoService {
 
     @Override
     public ProyectoResponseDto crearProyecto(CreateProyectoRequestDto dto) {
-        //Buscar programador por ID de perfil o por ID de usuario
+        // Buscar programador por ID de perfil o por ID de usuario
         ProgramadorPerfilEntity programador = programadorRepository.findById(dto.getProgramadorId())
                 .orElseGet(() -> programadorRepository.findByUsuarioId(dto.getProgramadorId())
                         .orElseThrow(() -> new ResourceNotFoundException("Programador", "id o usuarioId",
                                 dto.getProgramadorId())));
 
-        //Convertir DTO a entidad y guardar
+        // Convertir DTO a entidad y guardar
         ProyectoEntity entity = proyectoMapper.toEntity(dto, programador);
         ProyectoEntity savedEntity = proyectoRepository.save(entity);
         return proyectoMapper.toResponseDto(savedEntity);
@@ -51,7 +50,7 @@ public class ProyectoServiceImpl implements ProyectoService {
     @Override
     @Transactional(readOnly = true)
     public ProyectoResponseDto obtenerProyectoPorId(Long id) {
-        //Buscar proyecto por ID
+        // Buscar proyecto por ID
         ProyectoEntity entity = proyectoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proyecto", "id", id));
         return proyectoMapper.toResponseDto(entity);
@@ -59,20 +58,19 @@ public class ProyectoServiceImpl implements ProyectoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProyectoResponseDto> obtenerProyectosPorProgramador(Long programadorId) {
-        //Buscar proyectos por programador y convertir a DTOs
-        return proyectoRepository.findByProgramadorId(programadorId).stream()
-                .map(proyectoMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<ProyectoResponseDto> obtenerProyectosPorProgramador(Long programadorId, Pageable pageable) {
+        // Buscar proyectos por programador y convertir a DTOs con paginación
+        return proyectoRepository.findByProgramadorId(programadorId, pageable)
+                .map(proyectoMapper::toResponseDto);
     }
 
     @Override
     public ProyectoResponseDto actualizarProyecto(Long id, UpdateProyectoRequestDto dto) {
-        //Buscar proyecto existente por ID
+        // Buscar proyecto existente por ID
         ProyectoEntity entity = proyectoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Proyecto", "id", id));
 
-        //Actualizar campos que vienen en el DTO
+        // Actualizar campos que vienen en el DTO
         if (dto.getNombre() != null)
             entity.setNombre(dto.getNombre());
         if (dto.getDescripcion() != null)
@@ -92,23 +90,22 @@ public class ProyectoServiceImpl implements ProyectoService {
         if (dto.getDestacado() != null)
             entity.setDestacado(dto.getDestacado());
 
-        //Guardar cambios
+        // Guardar cambios
         ProyectoEntity updatedEntity = proyectoRepository.save(entity);
         return proyectoMapper.toResponseDto(updatedEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProyectoResponseDto> obtenerTodosLosProyectos() {
-        //Obtener todos los proyectos y convertir a DTOs
-        return proyectoRepository.findAll().stream()
-                .map(proyectoMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<ProyectoResponseDto> obtenerTodosLosProyectos(Pageable pageable) {
+        // Obtener todos los proyectos y convertir a DTOs con paginación
+        return proyectoRepository.findAll(pageable)
+                .map(proyectoMapper::toResponseDto);
     }
 
     @Override
     public void eliminarProyecto(Long id) {
-        //Verificar si existe
+        // Verificar si existe
         if (!proyectoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Proyecto", "id", id);
         }

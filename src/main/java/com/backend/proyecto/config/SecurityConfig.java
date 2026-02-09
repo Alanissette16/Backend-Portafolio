@@ -26,38 +26,38 @@ public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CorsConfigurationSource corsConfigurationSource;
 
-        //Constructor para inyección de dependencias
+        // Constructor para inyección de dependencias
         public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                         CorsConfigurationSource corsConfigurationSource) {
                 this.jwtAuthenticationFilter = jwtAuthenticationFilter;
                 this.corsConfigurationSource = corsConfigurationSource;
         }
 
-        //Bean para encriptar contraseñas con BCrypt
+        // Bean para encriptar contraseñas con BCrypt
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder();
         }
 
-        //Bean para el AuthenticationManager (usado en login)
+        // Bean para el AuthenticationManager (usado en login)
         @Bean
         public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
                 return config.getAuthenticationManager();
         }
 
-        //Configuración principal de seguridad
+        // Configuración principal de seguridad
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                                //Deshabilitar CSRF (no necesario para APIs REST stateless)
+                                // Deshabilitar CSRF (no necesario para APIs REST stateless)
                                 .csrf(csrf -> csrf.disable())
 
-                                //Configurar CORS
+                                // Configurar CORS
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
-                                //Configurar autorización de endpoints
+                                // Configurar autorización de endpoints
                                 .authorizeHttpRequests(auth -> auth
-                                                //Endpoints públicos (sin autenticación)
+                                                // Endpoints públicos (sin autenticación)
                                                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                                                 .requestMatchers("/api/auth/me").authenticated()
                                                 .requestMatchers(HttpMethod.GET, "/api/proyectos/publicos").permitAll()
@@ -65,12 +65,13 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/api/programadores/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/api/horarios/**").permitAll()
-                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
+
+                                                .requestMatchers("/actuator/**").permitAll()
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()
-                                                .requestMatchers("/actuator/**").permitAll()
 
-                                                //Endpoints de USUARIOS
+                                                // Endpoints de USUARIOS
                                                 .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}")
                                                 .hasAnyRole("ADMIN", "PROGRAMMER", "EXTERNAL")
                                                 .requestMatchers(HttpMethod.PUT, "/api/usuarios/{id}")
@@ -79,7 +80,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/reportes/**").hasAnyRole("ADMIN", "PROGRAMMER")
                                                 .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "PROGRAMMER")
 
-                                                //Endpoints de PROGRAMADOR
+                                                // Endpoints de PROGRAMADOR
                                                 .requestMatchers(HttpMethod.POST, "/api/programadores").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, "/api/programadores/me/**")
                                                 .hasRole("PROGRAMMER")
@@ -91,7 +92,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/proyectos/**").hasAnyRole("PROGRAMMER", "ADMIN")
                                                 .requestMatchers("/api/horarios/**").hasAnyRole("PROGRAMMER", "ADMIN")
 
-                                                //Endpoints de ASESORÍAS
+                                                // Endpoints de ASESORÍAS
                                                 .requestMatchers(HttpMethod.POST, "/api/asesorias").hasRole("EXTERNAL")
                                                 .requestMatchers(HttpMethod.GET, "/api/asesorias/mias")
                                                 .hasRole("EXTERNAL")
@@ -99,14 +100,14 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/asesorias/**")
                                                 .hasAnyRole("ADMIN", "PROGRAMMER", "EXTERNAL")
 
-                                                //Cualquier otro endpoint requiere autenticación
+                                                // Cualquier otro endpoint requiere autenticación
                                                 .anyRequest().authenticated())
 
-                                //Configurar sesión como STATELESS (JWT no usa sesiones)
+                                // Configurar sesión como STATELESS (JWT no usa sesiones)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                //Agregar filtro JWT antes del filtro de autenticación por defecto
+                                // Agregar filtro JWT antes del filtro de autenticación por defecto
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();

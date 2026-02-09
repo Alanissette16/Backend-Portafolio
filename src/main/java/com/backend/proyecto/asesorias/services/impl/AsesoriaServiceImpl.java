@@ -16,12 +16,12 @@ import com.backend.proyecto.notifications.services.NotificationService;
 import com.backend.proyecto.exceptions.BadRequestException;
 import com.backend.proyecto.exceptions.ResourceNotFoundException;
 import com.backend.proyecto.exceptions.UnauthorizedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -34,7 +34,7 @@ public class AsesoriaServiceImpl implements AsesoriaService {
     private final AsesoriaValidationService validationService;
     private final NotificationService notificationService;
 
-    //Constructor para inyección de dependencias
+    // Constructor para inyección de dependencias
     public AsesoriaServiceImpl(AsesoriaRepository asesoriaRepository,
             ProgramadorRepository programadorRepository,
             UsuarioRepository usuarioRepository,
@@ -51,34 +51,34 @@ public class AsesoriaServiceImpl implements AsesoriaService {
 
     @Override
     public AsesoriaResponseDto solicitarAsesoria(CreateAsesoriaRequestDto dto, Long usuarioExternoId) {
-        //Validar que el programador existe
-        //Validar que el programador existe y obtener su perfil usando el ID de Usuario
+        // Validar que el programador existe
+        // Validar que el programador existe y obtener su perfil usando el ID de Usuario
         ProgramadorPerfilEntity programador = programadorRepository.findByUsuarioId(dto.getProgramadorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Programador", "usuario_id", dto.getProgramadorId()));
 
-        //Validar que el usuario externo existe
+        // Validar que el usuario externo existe
         UsuarioEntity usuarioExterno = usuarioRepository.findById(usuarioExternoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", usuarioExternoId));
 
-        //Validar que el usuario sea EXTERNAL (aunque el security ya lo hace, doble
-        //check)
+        // Validar que el usuario sea EXTERNAL (aunque el security ya lo hace, doble
+        // check)
         if (usuarioExterno.getRole() != UsuarioEntity.RolUsuario.EXTERNAL) {
             throw new BadRequestException("Solo usuarios externos pueden solicitar asesorías");
         }
 
-        //1. Validar horario disponible
+        // 1. Validar horario disponible
         validationService.validarHorarioDisponible(programador.getId(), dto.getFecha(), dto.getHoraInicio(),
                 dto.getHoraFin());
 
-        //2. Validar solapamiento (con estado CONFIRMADA) - Las pendientes no bloquean
+        // 2. Validar solapamiento (con estado CONFIRMADA) - Las pendientes no bloquean
         validationService.validarNoSolapamiento(programador.getId(), dto.getFecha(), dto.getHoraInicio(),
                 dto.getHoraFin(), null);
 
-        //Crear entidad
+        // Crear entidad
         AsesoriaEntity entity = asesoriaMapper.toEntity(dto, programador, usuarioExterno);
         AsesoriaEntity savedEntity = asesoriaRepository.save(entity);
 
-        //Notificar al programador
+        // Notificar al programador
         notificationService.sendAsesoriaCreada(savedEntity);
 
         return asesoriaMapper.toResponseDto(savedEntity);
@@ -94,18 +94,16 @@ public class AsesoriaServiceImpl implements AsesoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsesoriaResponseDto> obtenerMisAsesorias(Long usuarioExternoId) {
-        return asesoriaRepository.findByUsuarioExternoId(usuarioExternoId).stream()
-                .map(asesoriaMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<AsesoriaResponseDto> obtenerMisAsesorias(Long usuarioExternoId, Pageable pageable) {
+        return asesoriaRepository.findByUsuarioExternoId(usuarioExternoId, pageable)
+                .map(asesoriaMapper::toResponseDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsesoriaResponseDto> obtenerAsesoriasDeProgramador(Long programadorId) {
-        return asesoriaRepository.findByProgramadorId(programadorId).stream()
-                .map(asesoriaMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<AsesoriaResponseDto> obtenerAsesoriasDeProgramador(Long programadorId, Pageable pageable) {
+        return asesoriaRepository.findByProgramadorId(programadorId, pageable)
+                .map(asesoriaMapper::toResponseDto);
     }
 
     @Override
@@ -117,7 +115,7 @@ public class AsesoriaServiceImpl implements AsesoriaService {
             throw new ResourceNotFoundException("Usuario", "id", usuarioId);
         }
 
-        //Validar que sea el programador dueño de la asesoría
+        // Validar que sea el programador dueño de la asesoría
         if (!entity.getProgramador().getUsuario().getId().equals(usuarioId)) {
             throw new UnauthorizedException("No tienes permiso para gestionar esta asesoría");
         }
@@ -125,8 +123,8 @@ public class AsesoriaServiceImpl implements AsesoriaService {
         AsesoriaEntity.EstadoAsesoria nuevoEstado = dto.getEstado();
 
         if (nuevoEstado != null) {
-            //Si intenta confirmar, volver a validar solapamiento (por si otra se confirmó
-            //mientras tanto)
+            // Si intenta confirmar, volver a validar solapamiento (por si otra se confirmó
+            // mientras tanto)
             if (nuevoEstado == AsesoriaEntity.EstadoAsesoria.CONFIRMADA) {
                 validationService.validarNoSolapamiento(
                         entity.getProgramador().getId(),
@@ -135,10 +133,10 @@ public class AsesoriaServiceImpl implements AsesoriaService {
                         entity.getHoraFin(),
                         entity.getId());
 
-                //Notificar confirmación
+                // Notificar confirmación
                 notificationService.sendAsesoriaConfirmada(entity);
             } else if (nuevoEstado == AsesoriaEntity.EstadoAsesoria.RECHAZADA) {
-                //Notificar rechazo
+                // Notificar rechazo
                 notificationService.sendAsesoriaRechazada(entity);
             }
 
@@ -181,9 +179,25 @@ public class AsesoriaServiceImpl implements AsesoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsesoriaResponseDto> obtenerTodasLasAsesorias() {
-        return asesoriaRepository.findAll().stream()
-                .map(asesoriaMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<AsesoriaResponseDto> obtenerTodasLasAsesorias(Pageable pageable) {
+        return asesoriaRepository.findAll(pageable)
+                .map(asesoriaMapper::toResponseDto);
+    }
+
+    @Override
+    public void eliminarAsesoria(Long id, Long usuarioId) {
+        AsesoriaEntity entity = asesoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asesoría", "id", id));
+
+        // Verificar permisos: el usuario debe ser el solicitante (External) o el
+        // programador asignado
+        boolean esSolicitante = entity.getUsuarioExterno().getId().equals(usuarioId);
+        boolean esProgramador = entity.getProgramador().getUsuario().getId().equals(usuarioId);
+
+        if (!esSolicitante && !esProgramador) {
+            throw new UnauthorizedException("No tienes permiso para eliminar esta asesoría");
+        }
+
+        asesoriaRepository.delete(entity);
     }
 }

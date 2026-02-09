@@ -78,6 +78,7 @@ Sistema backend para la gestión de portafolios profesionales multiusuario con s
 - Dashboard con estadísticas de asesorías
 - Dashboard con estadísticas de proyectos
 - Filtros por programador, fecha y estado
+- **Paginación en servicios clave** para optimización de rendimiento
 
 ### Gestión de Imágenes
 - Integración con Cloudinary para almacenamiento
@@ -176,7 +177,7 @@ src/main/java/com/backend/proyecto/
 | **Base de Datos** | PostgreSQL | 16 | Base de datos relacional |
 | **Seguridad** | Spring Security | 6.x | Autenticación y autorización |
 | **JWT** | JJWT | 0.12.3 | JSON Web Tokens |
-| **Documentación** | SpringDoc OpenAPI | 2.3.0 | Swagger/OpenAPI |
+| **Documentación** | SpringDoc OpenAPI | 2.8.4 | Swagger/OpenAPI |
 | **PDF** | OpenPDF | 1.3.30 | Generación de reportes |
 | **Email** | Spring Mail | 4.0.2 | Envío de correos |
 | **Cloud Storage** | Cloudinary HTTP44 | 1.35.0 | Gestión de imágenes |
@@ -558,7 +559,6 @@ La documentación completa de la API está disponible en Swagger UI:
 
 - Tests unitarios y de integración completos
 - Implementación de caché con Redis
-- Sistema de paginación avanzado
 - Webhooks para notificaciones en tiempo real
 - Métricas y monitoreo con Spring Actuator
 - Rate limiting para protección de API

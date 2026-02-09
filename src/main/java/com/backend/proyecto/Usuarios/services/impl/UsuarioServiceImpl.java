@@ -11,13 +11,13 @@ import com.backend.proyecto.Usuarios.repositories.UsuarioRepository;
 import com.backend.proyecto.Usuarios.services.UsuarioService;
 import com.backend.proyecto.exceptions.DuplicateResourceException;
 import com.backend.proyecto.exceptions.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
 
 //Implementación del servicio de Usuario
 @Service
@@ -29,7 +29,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
 
-    //Constructor para inyección de dependencias
+    // Constructor para inyección de dependencias
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository,
             ProgramadorRepository programadorRepository,
             UsuarioMapper usuarioMapper,
@@ -42,33 +42,33 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public UsuarioResponseDto crearUsuario(CreateUsuarioRequestDto dto) {
-        //Verificar que no exista usuario con ese email
+        // Verificar que no exista usuario con ese email
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicateResourceException("Usuario", "email", dto.getEmail());
         }
 
-        //Convertir DTO a Entity
+        // Convertir DTO a Entity
         UsuarioEntity entity = usuarioMapper.toEntity(dto);
 
-        //Encriptar contraseña
+        // Encriptar contraseña
         entity.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        //Guardar en base de datos
+        // Guardar en base de datos
         UsuarioEntity savedEntity = usuarioRepository.save(entity);
 
-        //Si el rol es PROGRAMMER, crear perfil de programador
+        // Si el rol es PROGRAMMER, crear perfil de programador
         if (savedEntity.getRole() == UsuarioEntity.RolUsuario.PROGRAMMER) {
             crearPerfilProgramadorSiNoExiste(savedEntity);
         }
 
-        //Convertir a ResponseDto y retornar
+        // Convertir a ResponseDto y retornar
         return usuarioMapper.toResponseDto(savedEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UsuarioResponseDto obtenerUsuarioPorId(Long id) {
-        //Buscar usuario por ID
+        // Buscar usuario por ID
         UsuarioEntity entity = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
         return usuarioMapper.toResponseDto(entity);
@@ -76,37 +76,34 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDto> obtenerTodosLosUsuarios() {
-        //Listar todos los usuarios y convertirlos a DTO
-        return usuarioRepository.findAll().stream()
-                .map(usuarioMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<UsuarioResponseDto> obtenerTodosLosUsuarios(Pageable pageable) {
+        // Listar todos los usuarios y convertirlos a DTO
+        return usuarioRepository.findAll(pageable)
+                .map(usuarioMapper::toResponseDto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDto> obtenerProgramadores() {
-        //Listar solo usuarios con rol PROGRAMMER
-        return usuarioRepository.findAll().stream()
-                .filter(user -> user.getRole() == UsuarioEntity.RolUsuario.PROGRAMMER)
-                .map(usuarioMapper::toResponseDto)
-                .collect(Collectors.toList());
+    public Page<UsuarioResponseDto> obtenerProgramadores(Pageable pageable) {
+        // Listar solo usuarios con rol PROGRAMMER
+        return usuarioRepository.findByRole(UsuarioEntity.RolUsuario.PROGRAMMER, pageable)
+                .map(usuarioMapper::toResponseDto);
     }
 
     @Override
     public UsuarioResponseDto actualizarUsuario(Long id, UpdateUsuarioRequestDto dto) {
-        //Buscar usuario existente
+        // Buscar usuario existente
         UsuarioEntity entity = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
-        //Actualizar solo los campos que vienen en el DTO
+        // Actualizar solo los campos que vienen en el DTO
         if (dto.getEmail() != null) {
             String newEmail = dto.getEmail().trim().toLowerCase();
             String currentEmail = entity.getEmail().trim().toLowerCase();
 
             if (!newEmail.equals(currentEmail)) {
-                //Verificar que el nuevo email no esté en uso por OTRO usuario (ignorando
-                //mayúsculas)
+                // Verificar que el nuevo email no esté en uso por OTRO usuario (ignorando
+                // mayúsculas)
                 usuarioRepository.findByEmailIgnoreCase(dto.getEmail())
                         .ifPresent(existingUser -> {
                             if (!existingUser.getId().equals(id)) {
@@ -182,16 +179,16 @@ public class UsuarioServiceImpl implements UsuarioService {
                 UsuarioEntity.RolUsuario newRole = UsuarioEntity.RolUsuario.valueOf(dto.getRole().toUpperCase());
                 entity.setRole(newRole);
 
-                //Si cambia a PROGRAMMER, asegurar que tenga perfil
+                // Si cambia a PROGRAMMER, asegurar que tenga perfil
                 if (newRole == UsuarioEntity.RolUsuario.PROGRAMMER) {
                     crearPerfilProgramadorSiNoExiste(entity);
                 }
             } catch (IllegalArgumentException e) {
-                //Ignore invalid roles or log warning
+                // Ignore invalid roles or log warning
             }
         }
 
-        //Guardar cambios
+        // Guardar cambios
         UsuarioEntity updatedEntity = usuarioRepository.save(entity);
         return usuarioMapper.toResponseDto(updatedEntity);
     }
@@ -203,14 +200,14 @@ public class UsuarioServiceImpl implements UsuarioService {
             perfil.setEspecialidad(usuario.getSpecialty() != null ? usuario.getSpecialty() : "Desarrollador");
             perfil.setBiografia(usuario.getBio() != null ? usuario.getBio() : "");
             perfil.setTarifa(BigDecimal.ZERO);
-            //Inicializar otros campos si es necesario
+            // Inicializar otros campos si es necesario
             programadorRepository.save(perfil);
         }
     }
 
     @Override
     public void eliminarUsuario(Long id) {
-        //Verificar si existe
+        // Verificar si existe
         if (!usuarioRepository.existsById(id)) {
             throw new ResourceNotFoundException("Usuario", "id", id);
         }
@@ -221,10 +218,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional(readOnly = true)
     public UsuarioResponseDto obtenerUsuarioPorEmail(String email) {
-        //Buscar por email y convertir a DTO
+        // Buscar por email y convertir a DTO
         UsuarioEntity entity = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
 
         return usuarioMapper.toResponseDto(entity);
     }
+
 }
