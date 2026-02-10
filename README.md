@@ -19,9 +19,9 @@ Sistema backend para la gestión de portafolios profesionales multiusuario con s
 ### Proyecto Integrador
 
 **Asignatura**: Programación y Plataformas Web  
-**Institución**: Universidad de las Fuerzas Armadas ESPE  
-**Período**: Marzo - Agosto 2024  
-**Docente**: Ing. Cristian Timbi Sisalima
+**Institución**: Universidad Politecnica Salesiana 
+**Período**: P67 
+**Docente**: Ing. Pablo Torres
 
 ---
 
@@ -569,8 +569,8 @@ La documentación completa de la API está disponible en Swagger UI:
 
 ## Autores
 
-**Alan Mantilla & Alisson Estefany**  
-Estudiantes de Computación - Universidad de las Fuerzas Armadas ESPE
+**Valeria Mantilla & Claudia Quevedo**  
+Estudiantes de Computación - Universidad Politecnica Salesiana
 
 ---
 
@@ -592,8 +592,8 @@ Para problemas o preguntas:
 
 ## Agradecimientos
 
-- **Ing. Cristian Timbi Sisalima** - Docente de la asignatura
-- **Universidad de las Fuerzas Armadas ESPE**
+- **Ing. Pablo Torres** - Docente de la asignatura
+- **Universidad Politecnica Salesiana**
 - Comunidad de Spring Boot y PostgreSQL
 
 ---
